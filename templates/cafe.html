@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>{{ cafe.name }}</h2>
+<p>Google Maps: {{ cafe.map_url }}</p>
+<p>Location: {{ cafe.location }}</p>
+<p>Number of seats: {{ cafe.seats }}</p><p></p>
+<p>Has Toilet?: {{ cafe.has_toilet }}</p>
+<p>Has WiFi?: {{ cafe.has_wifi }}</p>
+<p>Has Outlets: {{ cafe.has_outlets }}</p>
+<p>Can Take Calls?: {{ cafe.can_take_calls }}</p>
+<p>Average coffee price: {{ cafe.coffee_price }}</p>
+
+
+{% endblock  %}
