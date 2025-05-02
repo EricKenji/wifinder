@@ -4,12 +4,28 @@
 
 {% block content %}
 <header class="bg-primary text-white py-4 shadow-sm">
-  <div class="container d-flex justify-content-between align-items-center">
-    <h1 class="display-5 fw-bold mb-0">🛜 WiFinder</h1>
-    <form role="search" method="get" action="{{ url_for('search_location') }}">
-      <input type="search" placeholder="Search Locations" name="loc" value="{{ request.args.get('loc', '') }}">
-      <button class="btn btn-outline-primary" type="submit">Search</button>
-    </form>
+  <div class="container">
+    <div class="row align-items-center">
+      <!-- Site Title -->
+      <div class="col-md-4">
+        <h1 class="display-6 fw-bold mb-0">🛜 WiFinder</h1>
+      </div>
+
+      <!-- Search Form -->
+      <div class="col-md-5 mt-3 mt-md-0">
+        <form class="d-flex" role="search" method="get" action="{{ url_for('search_location') }}">
+          <input type="search" class="form-control me-2" placeholder="Search Locations" name="loc" value="{{ request.args.get('loc', '') }}">
+          <button class="btn btn-outline-light" type="submit">Search</button>
+        </form>
+      </div>
+
+      <!-- Add Cafe Button -->
+      <div class="col-md-3 text-md-end mt-3 mt-md-0">
+        <a href="{{ url_for('add_cafe') }}" class="btn btn-light">
+          ➕ Add Cafe
+        </a>
+      </div>
+    </div>
   </div>
 </header>
 <div class="container mt-5">
@@ -20,7 +36,7 @@
         <div>
           <h5 class="mb-1">{{ cafe.name }}</h5>
           <p class="mb-1 text-muted">{{ cafe.location }}</p>
-          <small>Has WiFi? {{ cafe.has_wifi }} | Outlets: {{ 'Yes' if cafe.has_sockets else 'No' }}</small>
+          <small>Has WiFi? {{ 'Yes' if cafe.has_wifi else 'No' }} | Outlets: {{ 'Yes' if cafe.has_sockets else 'No' }}</small>
         </div>
       </a>
     {% endfor %}

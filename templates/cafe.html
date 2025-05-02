@@ -1,15 +1,30 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>{{ cafe.name }}</h2>
-<p>Google Maps: {{ cafe.map_url }}</p>
-<p>Location: {{ cafe.location }}</p>
-<p>Number of seats: {{ cafe.seats }}</p><p></p>
-<p>Has Toilet?: {{ cafe.has_toilet }}</p>
-<p>Has WiFi?: {{ cafe.has_wifi }}</p>
-<p>Has Outlets: {{ cafe.has_outlets }}</p>
-<p>Can Take Calls?: {{ cafe.can_take_calls }}</p>
-<p>Average coffee price: {{ cafe.coffee_price }}</p>
-<!--a-->
+<div class="container mt-5">
+<!--    shadow-lg for depth-->
+  <div class="card shadow-lg">
+<!--      card-img-top ensures it stretches properly across the card width -->
+    <img src="{{ cafe.img_url }}" class="card-img-top" alt="Image of {{ cafe.name }}">
+    <div class="card-body">
+      <h2 class="card-title">{{ cafe.name }}</h2>
+      <p class="text-muted">{{ cafe.location }}</p>
 
-{% endblock  %}
+      <a href="{{ cafe.map_url }}" target="_blank" class="btn btn-outline-primary mb-3">
+        📍 View on Google Maps
+      </a>
+<!--list-group-flush removes card borders between items-->
+      <ul class="list-group list-group-flush mb-3">
+        <li class="list-group-item"><strong>Seats:</strong> {{ cafe.seats }}</li>
+        <li class="list-group-item"><strong>Toilet Available:</strong> {{ 'Yes' if cafe.has_toilet else 'No' }}</li>
+        <li class="list-group-item"><strong>WiFi Available:</strong> {{ 'Yes' if cafe.has_wifi else 'No' }}</li>
+        <li class="list-group-item"><strong>Power Outlets:</strong> {{ 'Yes' if cafe.has_outlets else 'No' }}</li>
+        <li class="list-group-item"><strong>Calls Allowed:</strong> {{ 'Yes' if cafe.can_take_calls else 'No' }}</li>
+        <li class="list-group-item"><strong>Coffee Price:</strong> {{ cafe.coffee_price or 'N/A' }}</li>
+      </ul>
+
+      <a href="{{ url_for('home') }}" class="btn btn-secondary">← Back to Cafes</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
