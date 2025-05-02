@@ -22,9 +22,21 @@
         <li class="list-group-item"><strong>Calls Allowed:</strong> {{ 'Yes' if cafe.can_take_calls else 'No' }}</li>
         <li class="list-group-item"><strong>Coffee Price:</strong> {{ cafe.coffee_price or 'N/A' }}</li>
       </ul>
-
-      <a href="{{ url_for('home') }}" class="btn btn-secondary">← Back to Cafes</a>
+      <div class="d-flex justify-content-between mt-4">
+        <a href="{{ url_for('home') }}" class="btn btn-secondary">
+          ← Back to Cafes
+        </a>
+        <a href="{{ url_for('update_cafe', cafe_id=cafe.id) }}" class="btn btn-warning me-2">
+          ✏️ Update Cafe
+        </a>
+        <form method="POST" action="{{ url_for('report_closed', cafe_id=cafe.id) }}">
+          <button type="submit" class="btn btn-danger">
+            🛑 Report Closed
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 </div>
+
 {% endblock %}

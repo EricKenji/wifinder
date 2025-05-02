@@ -1,14 +1,14 @@
-from ensurepip import bootstrap
-
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Boolean
-import random
+from flask_wtf import FlaskForm
+from wtforms import StringField, BooleanField, SubmitField, URLField
+from wtforms.validators import DataRequired, URL
 from flask_bootstrap import Bootstrap5
 
-
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'sdfa098324'
 Bootstrap5(app)
 # CREATE DB
 class Base(DeclarativeBase):
@@ -43,12 +43,25 @@ class Cafe(db.Model):
 with app.app_context():
     db.create_all()
 
+# Flask WTForm for adding a new cafe
+class CafeForm(FlaskForm):
+    name = StringField('Cafe Name', validators=[DataRequired()])
+    map_url = URLField('Map URL', validators=[DataRequired(), URL()])
+    img_url = URLField('Image URL', validators=[DataRequired(), URL()])
+    location = StringField('Location', validators=[DataRequired()])
+    seats = StringField('Seats', validators=[DataRequired()])
+    has_toilet = BooleanField('Has Toilet')
+    has_wifi = BooleanField('Has Wifi')
+    has_sockets = BooleanField('Has Sockets')
+    can_take_calls = BooleanField('Can Take Calls')
+    coffee_price = StringField('Coffee Price')
+    submit = SubmitField('Add Cafe')
+
 #Home page where all cafes are displayed
 @app.route("/")
 def home():
     result = db.session.execute(db.select(Cafe).order_by(Cafe.name))
     all_cafes = result.scalars().all()
-    print(all_cafes)
     return render_template("index.html", cafes=all_cafes)
 
 
@@ -57,17 +70,6 @@ def home():
 def cafe_detail(cafe_id):
     cafe = db.session.execute(db.select(Cafe).where(Cafe.id == cafe_id)).scalar()
     return render_template("cafe.html", cafe=cafe)
-
-
-
-@app.route("/random")
-def get_random_cafe():
-    with app.app_context():
-        result = db.session.execute(db.select(Cafe))
-        all_cafes = result.scalars().all()
-        random_cafe = random.choice(all_cafes)
-        return jsonify(cafe=random_cafe.to_dict())
-
 
 @app.route("/search")
 def search_location():
@@ -81,56 +83,47 @@ def search_location():
             error={"Not Found": "Sorry, we don't have a cafe at that location"}
         ), 404
 
-
-# HTTP POST - Create Record
+# Adding a new cafe
 @app.route("/add", methods=["GET", "POST"])
 def add_cafe():
-    new_cafe = Cafe(
-        name = request.form.get("name"),
-        map_url = request.form.get("map_url"),
-        img_url = request.form.get("img_url"),
-        location = request.form.get("location"),
-        seats = request.form.get("seats"),
-        has_toilet=request.form.get("has_toilet") == 'True',  # Convert to Boolean
-        has_wifi=request.form.get("has_wifi") == 'True',  # Convert to Boolean
-        has_sockets=request.form.get("has_sockets") == 'True',  # Convert to Boolean
-        can_take_calls=request.form.get("can_take_calls") == 'True',  # Convert to Boolean
-        coffee_price = request.form.get("coffee_price")
-    )
-    db.session.add(new_cafe)
-    db.session.commit()
-    return jsonify(response ={"success": "Successfully added new cafe."})
-
-# HTTP PUT/PATCH - Update Record
-@app.route("/update-price/<cafe_id>", methods=["PATCH"])
-def update_price(cafe_id):
-    new_price = request.args.get("new_price")
-    cafe_to_update = db.get_or_404(Cafe, cafe_id)
-    if cafe_to_update:
-        cafe_to_update.coffee_price = new_price
+    form = CafeForm()
+    if form.validate_on_submit():
+        new_cafe = Cafe(
+            name=form.name.data,
+            location=form.location.data,
+            img_url=form.img_url.data,
+            map_url=form.map_url.data,
+            seats=form.seats.data,
+            has_toilet=form.has_toilet.data,
+            has_wifi=form.has_wifi.data,
+            has_sockets=form.has_sockets.data,
+            can_take_calls=form.can_take_calls.data,
+            coffee_price=form.coffee_price.data,
+        )
+        db.session.add(new_cafe)
         db.session.commit()
-        return jsonify(response = {"Success" : "Successfully updated price."})
-    else:
-        return jsonify(error = {"Not Found": "Sorry a cafe with that id was not found."})
+        return redirect(url_for('home'))
+    return render_template("add_cafe.html", form=form)
+
+# Update an existing cafe
+@app.route("/update-cafe/<cafe_id>", methods=["GET", "POST"])
+def update_cafe(cafe_id):
+    cafe_to_update = db.get_or_404(Cafe, cafe_id)
+    form = CafeForm(obj=cafe_to_update)
+    if form.validate_on_submit():
+        form.populate_obj(cafe_to_update)
+        db.session.commit()
+        return redirect(url_for('cafe_detail', cafe_id=cafe_id))
+    return render_template("update_cafe.html", form=form, cafe=cafe_to_update)
 
 
-# HTTP DELETE - Delete Record
-@app.route("/report-closed/<cafe_id>", methods=["DELETE"])
+#Delete cafe from database
+@app.route("/report-closed/<cafe_id>", methods=["POST"])
 def report_closed(cafe_id):
-    api_key = request.args.get("api-key")
-    cafe_to_delete = db.session.execute(db.select(Cafe).where(Cafe.id == cafe_id)).scalar()
-
-    if cafe_to_delete:
-        if api_key == "TopSecretAPIKey":
-            db.session.delete(cafe_to_delete)
-            db.session.commit()
-            return jsonify(response = {"Success" : "Successfully removed cafe."})
-        else:
-            return jsonify(error={"Forbidden": "The api key is incorrect."}), 403
-
-    else:
-        return jsonify(error = {"Not Found": "Sorry a cafe with that id was not found."}), 404
-
+    cafe_to_delete = db.get_or_404(Cafe, cafe_id)
+    db.session.delete(cafe_to_delete)
+    db.session.commit()
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(debug=True)
